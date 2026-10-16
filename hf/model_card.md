@@ -50,6 +50,9 @@ Share of **non-toxic** comments flagged for review (threshold 0.217), on test co
 
 **Limitation:** the model is fairer than the baseline for every group, but harmless comments that mention some identities are still flagged **2–4× more often** than average. Do not use it to make decisions about people or content without human review.
 
+## Browser version (the demo)
+The [demo](https://huggingface.co/spaces/Malavnaik/moderation-classifier-demo) runs a compressed copy (`onnx/model_quantized.onnx`, int8, 67 MB) in the visitor's browser. On 2,000 random Civil Comments test comments it gave the **same publish / review / auto-action decision as the full model 97% of the time**; toxicity scores differed by 0.014 on average (largest difference 0.21).
+
 ## Other limits
 - English news-site comments from 2015–2017; other platforms, languages and slang will score differently.
 - Labels reflect crowd raters' judgements, which carry their own biases.
