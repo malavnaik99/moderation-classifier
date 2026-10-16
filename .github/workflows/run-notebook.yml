@@ -1,7 +1,13 @@
-# Runs the notebook on Kaggle's free CPU, waits for it, and saves its outputs (metrics, charts, model) as a run artifact.
+# Runs the notebook on Kaggle's free GPU, waits for it, and saves its outputs (metrics, charts, model) as a run artifact.
 # The Kaggle notebook stays private until Malav approves it.
 name: Run Kaggle notebook
-on: workflow_dispatch
+on:
+  workflow_dispatch:
+    inputs:
+      quick:
+        description: "Quick check run on 20,000 comments"
+        type: boolean
+        default: true
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -14,6 +20,7 @@ jobs:
       - run: pip install -q --upgrade kaggle jupytext ipykernel
       - name: Push to Kaggle
         run: |
+          if [ "${{ inputs.quick }}" = "true" ]; then sed -i 's/^QUICK = False/QUICK = True/' kaggle/notebook.py; fi
           jupytext --to ipynb --set-kernel python3 kaggle/notebook.py -o kaggle/notebook.ipynb
           kaggle kernels push -p kaggle
       - name: Wait for Kaggle to finish
