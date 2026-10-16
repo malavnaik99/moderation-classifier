@@ -36,6 +36,7 @@ jobs:
         run: |
           mkdir -p out && kaggle kernels output "$KERNEL" -p out || true
           ls -la out
+          grep -oE 'Device: [a-z]+|step [0-9]+/[0-9]+ loss [0-9.]+' out/*.log | tail -5 || true
           [ -f out/metrics.json ] && cat out/metrics.json || tail -c 4000 out/*.log 2>/dev/null || true
       - uses: actions/upload-artifact@v4
         if: always()
