@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Moderation classifier demo</title>
+<style>
+  :root { --text:#1f2328; --muted:#59636e; --bg:#fff; --card:#f6f8fa; --line:#d0d7de; --bar:#4c72b0; }
+  @media (prefers-color-scheme: dark) { :root { --text:#e6e6e6; --muted:#a0a7b0; --bg:#111418; --card:#1a1f25; --line:#2a2f36; --bar:#8ab4f8; } }
+  body { margin:0; background:var(--bg); color:var(--text); font:16px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif; }
+  main { max-width:42rem; margin:0 auto; padding:1.25rem 1rem 3rem; }
+  .note { background:var(--card); border:1px solid var(--line); border-radius:8px; padding:.6rem .8rem; font-size:.9rem; }
+  textarea { width:100%; box-sizing:border-box; font:inherit; padding:.5rem; border:1px solid var(--line); border-radius:6px; background:var(--bg); color:var(--text); }
+  button { font:inherit; padding:.4rem .8rem; border:1px solid var(--line); border-radius:6px; background:var(--card); color:var(--text); cursor:pointer; }
+  .row { display:grid; grid-template-columns:9rem 1fr 3rem; gap:.5rem; align-items:center; margin:.25rem 0; }
+  .track { background:var(--card); border:1px solid var(--line); border-radius:4px; height:.8rem; }
+  .fill { background:var(--bar); height:100%; border-radius:3px; width:0; }
+  #decision { font-weight:600; min-height:1.5em; }
+  .muted { color:var(--muted); font-size:.85rem; }
+  .examples button { margin:.2rem .2rem 0 0; font-size:.85rem; }
+</style>
+</head>
+<body>
+<main>
+  <h1>Moderation classifier demo</h1>
+  <p class="note"><strong>Portfolio demo, not a production moderation system.</strong> DistilBERT fine-tuned on the public Civil Comments data (CC0) by <a href="https://malavnaik99.github.io">Malav Naik</a>. It runs in your browser: nothing you type is sent anywhere.
+  Known limit: harmless comments that mention some identities are flagged 2–4× more often than average.</p>
+
+  <label for="text"><strong>Comment</strong></label>
+  <textarea id="text" rows="3" maxlength="1000" placeholder="Type a comment…"></textarea>
+  <div class="examples" aria-label="Examples">
+    <button type="button">Thanks for the thoughtful article, I learned a lot.</button>
+    <button type="button">I disagree with this policy, but I see your point.</button>
+    <button type="button">As a gay man, I found this piece really moving.</button>
+    <button type="button">This is the dumbest idea I have read all week.</button>
+  </div>
+  <p><label for="thr">Send-to-review threshold: <output id="thrv"></output></label><br>
+  <input id="thr" type="range" min="0.05" max="0.8" step="0.01" style="width:100%"></p>
+  <p><button id="go" type="button" disabled>Loading model (about 70 MB, once)…</button></p>
+  <p id="decision" aria-live="polite"></p>
+  <div id="scores"></div>
+  <p class="muted">Lower the threshold to catch more toxic comments, and wrongly flag more harmless ones. Auto-action needs toxicity ≥ <span id="auto"></span> (90% precision on held-out data).</p>
+</main>
+<script type="module">
+import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2";
+env.allowRemoteModels = false;
+env.localModelPath = "./";
+const LABELS = ["toxicity", "obscene", "identity_attack", "insult", "threat"];
+const $ = (id) => document.getElementById(id);
+const T = await (await fetch("model/thresholds.json")).json();
+$("thr").value = T.send_to_review.toFixed(2); $("thrv").value = $("thr").value; $("auto").textContent = T.auto_action.toFixed(2);
+$("thr").oninput = () => { $("thrv").value = $("thr").value; run(); };
+document.querySelectorAll(".examples button").forEach((b) => b.onclick = () => { $("text").value = b.textContent; run(); });
+const clf = await pipeline("text-classification", "model", { dtype: "q8" });
+$("go").textContent = "Score"; $("go").disabled = false; $("go").onclick = run;
+
+async function run() {
+  const text = $("text").value.slice(0, 1000).trim();
+  if (!text || $("go").disabled) return;
+  const out = await clf(text, { top_k: null });
+  const s = Object.fromEntries(out.map((o) => [o.label, o.score]));
+  const t = s.toxicity, r = +$("thr").value;
+  $("decision").textContent = t >= T.auto_action ? `🔴 Auto-action (toxicity ${t.toFixed(2)})`
+    : t >= r ? `🟠 Send to human review (toxicity ${t.toFixed(2)} ≥ ${r.toFixed(2)})`
+    : `🟢 Publish (toxicity ${t.toFixed(2)} < ${r.toFixed(2)})`;
+  $("scores").innerHTML = LABELS.map((l) => `<div class="row"><span>${l.replace("_", " ")}</span>
+    <div class="track" role="meter" aria-valuemin="0" aria-valuemax="1" aria-valuenow="${s[l].toFixed(2)}" aria-label="${l}"><div class="fill" style="width:${(s[l] * 100).toFixed(1)}%"></div></div>
+    <span>${s[l].toFixed(2)}</span></div>`).join("");
+}
+</script>
+</body>
+</html>
