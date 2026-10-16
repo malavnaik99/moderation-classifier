@@ -1,0 +1,44 @@
+# Copies the latest Kaggle run's DistilBERT model to Hugging Face (model repo + Gradio demo Space).
+# Both are created PRIVATE; Malav makes them public after reviewing them.
+name: Publish to Hugging Face
+on: workflow_dispatch
+env:
+  MODEL_REPO: Malavnaik/civil-comments-distilbert-moderation
+  SPACE_REPO: Malavnaik/moderation-classifier-demo
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    timeout-minutes: 40
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+      HF_HUB_DISABLE_PROGRESS_BARS: "1"
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q --upgrade kaggle huggingface_hub
+      - name: Get the trained model from Kaggle
+        run: |
+          kaggle kernels output malavnaik/moderation-classifier-civil-comments -p out
+          test -f out/distilbert/model.safetensors
+          cp hf/model_card.md out/distilbert/README.md
+          cp out/metrics.json out/distilbert/
+          mkdir -p space/model && cp out/distilbert/{config.json,model.safetensors,tokenizer.json,tokenizer_config.json,thresholds.json} space/model/
+      - name: Upload (private)
+        shell: python
+        run: |
+          import os, time
+          from huggingface_hub import HfApi
+          api = HfApi()
+          m, s = os.environ["MODEL_REPO"], os.environ["SPACE_REPO"]
+          api.create_repo(m, private=True, exist_ok=True)
+          api.upload_folder(repo_id=m, folder_path="out/distilbert", commit_message="Model from Kaggle run")
+          api.create_repo(s, repo_type="space", space_sdk="gradio", private=True, exist_ok=True)
+          api.upload_folder(repo_id=s, repo_type="space", folder_path="space", commit_message="Demo app")
+          print(f"Model: https://huggingface.co/{m}\nSpace: https://huggingface.co/spaces/{s}")
+          for _ in range(60):  # wait for the Space to build and start
+              stage = api.get_space_runtime(s, ).stage
+              print("Space:", stage)
+              if stage in ("RUNNING", "BUILD_ERROR", "RUNTIME_ERROR", "CONFIG_ERROR"):
+                  break
+              time.sleep(20)
+          assert stage == "RUNNING", f"Space did not start: {stage}"
