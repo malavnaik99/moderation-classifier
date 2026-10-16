@@ -44,6 +44,7 @@
 <script type="module">
 import { pipeline, env } from "https://cdn.jsdelivr.net/npm/@huggingface/transformers@3.0.2";
 env.allowRemoteModels = false;
+env.allowLocalModels = true;  // off by default in browsers; the model files live in this Space
 env.localModelPath = "./";
 const LABELS = ["toxicity", "obscene", "identity_attack", "insult", "threat"];
 const $ = (id) => document.getElementById(id);
@@ -51,8 +52,14 @@ const T = await (await fetch("model/thresholds.json")).json();
 $("thr").value = T.send_to_review.toFixed(2); $("thrv").value = $("thr").value; $("auto").textContent = T.auto_action.toFixed(2);
 $("thr").oninput = () => { $("thrv").value = $("thr").value; run(); };
 document.querySelectorAll(".examples button").forEach((b) => b.onclick = () => { $("text").value = b.textContent; run(); });
-const clf = await pipeline("text-classification", "model", { dtype: "q8" });
-$("go").textContent = "Score"; $("go").disabled = false; $("go").onclick = run;
+let clf;
+try {
+  clf = await pipeline("text-classification", "model", { dtype: "q8" });
+  $("go").textContent = "Score"; $("go").disabled = false; $("go").onclick = run;
+} catch (e) {
+  $("go").textContent = "Could not load the model";
+  $("decision").textContent = "⚠️ " + (e && e.message ? e.message : e);
+}
 
 async function run() {
   const text = $("text").value.slice(0, 1000).trim();
