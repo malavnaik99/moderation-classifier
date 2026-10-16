@@ -247,7 +247,21 @@ plt.tight_layout(); plt.savefig(OUT / "fairness_fpr.png", dpi=120); plt.show()
 fair
 
 # %% [markdown]
-# ## 7. Save the models and the numbers
+# ## 7. Official late-submission score
+# The competition is closed, but Kaggle still scores late submissions (no ranking or medals). The DistilBERT toxicity score for each comment in the competition's test set goes into `submission.csv`.
+
+# %%
+comp_test = pd.read_csv(Path(DATA).parent / "test.csv")
+if QUICK:
+    comp_test = comp_test.head(2000)
+comp_test["comment_text"] = comp_test["comment_text"].fillna("")
+df = pd.concat([df, comp_test.set_index(comp_test.index + 10**8)[["comment_text"]]])  # encode() reads from df
+sub_scores = bert_scores(comp_test.index + 10**8)[:, LABELS.index("toxicity")]
+pd.DataFrame({"id": comp_test["id"], "prediction": sub_scores}).to_csv(OUT / "submission.csv", index=False)
+print("submission rows:", len(comp_test))
+
+# %% [markdown]
+# ## 8. Save the models and the numbers
 
 # %%
 joblib.dump({"vectorizer": vec, "models": models, "labels": LABELS, "thresholds": thresholds["baseline"]},

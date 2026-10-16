@@ -38,6 +38,15 @@ jobs:
           ls -la out
           grep -oE 'Device: [a-z]+|step [0-9]+/[0-9]+ loss [0-9.]+' out/*.log | tail -5 || true
           [ -f out/metrics.json ] && cat out/metrics.json || tail -c 4000 out/*.log 2>/dev/null || true
+      - name: Late submission to the competition (official score, no ranking)
+        if: ${{ !inputs.quick }}
+        continue-on-error: true
+        run: |
+          C=jigsaw-unintended-bias-in-toxicity-classification
+          kaggle competitions submit -c $C -f out/submission.csv -m "DistilBERT late submission (portfolio)" \
+            || kaggle competitions submit -c $C -k "$KERNEL" -f submission.csv -m "DistilBERT late submission (portfolio)"
+          sleep 120
+          kaggle competitions submissions -c $C | head -5
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: notebook-output, path: out, if-no-files-found: warn }
