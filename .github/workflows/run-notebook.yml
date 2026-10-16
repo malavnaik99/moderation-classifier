@@ -1,0 +1,35 @@
+# Runs the notebook on Kaggle's free CPU, waits for it, and saves its outputs (metrics, charts, model) as a run artifact.
+# The Kaggle notebook stays private until Malav approves it.
+name: Run Kaggle notebook
+on: workflow_dispatch
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 240
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KERNEL: malavnaik/moderation-classifier-civil-comments
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q --upgrade kaggle jupytext
+      - name: Push to Kaggle
+        run: |
+          jupytext --to ipynb kaggle/notebook.py -o kaggle/notebook.ipynb
+          kaggle kernels push -p kaggle
+      - name: Wait for Kaggle to finish
+        run: |
+          sleep 60
+          while true; do
+            s=$(kaggle kernels status "$KERNEL" 2>&1 | tr 'A-Z' 'a-z'); echo "$(date -u +%H:%M) $s"
+            case "$s" in *complete*) break;; *error*|*cancel*) exit 1;; esac
+            sleep 120
+          done
+      - name: Download outputs
+        if: always()
+        run: |
+          mkdir -p out && kaggle kernels output "$KERNEL" -p out || true
+          ls -la out
+          [ -f out/metrics.json ] && cat out/metrics.json || tail -c 4000 out/*.log 2>/dev/null || true
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: notebook-output, path: out, if-no-files-found: warn }

@@ -1,0 +1,13 @@
+{
+  "id": "malavnaik/moderation-classifier-civil-comments",
+  "title": "Moderation classifier: Civil Comments",
+  "code_file": "notebook.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": false,
+  "enable_internet": false,
+  "dataset_sources": [],
+  "competition_sources": ["jigsaw-unintended-bias-in-toxicity-classification"],
+  "kernel_sources": []
+}
