@@ -11,7 +11,7 @@ jobs:
       KERNEL: malavnaik/moderation-classifier-civil-comments
     steps:
       - uses: actions/checkout@v4
-      - run: pip install -q --upgrade kaggle jupytext
+      - run: pip install -q --upgrade kaggle jupytext ipykernel
       - name: Push to Kaggle
         run: |
           jupytext --to ipynb --set-kernel python3 kaggle/notebook.py -o kaggle/notebook.ipynb
