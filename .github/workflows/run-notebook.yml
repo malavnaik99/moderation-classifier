@@ -1,5 +1,5 @@
 # Runs the notebook on Kaggle's free GPU, waits for it, and saves its outputs (metrics, charts, model) as a run artifact.
-# The Kaggle notebook stays private until Malav approves it.
+# The Kaggle notebook is public (approved by Malav on 16 Oct 2026).
 name: Run Kaggle notebook
 on:
   workflow_dispatch:

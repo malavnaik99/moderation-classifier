@@ -1,0 +1,18 @@
+# Makes the Hugging Face model and demo Space public (run once, after Malav approved them).
+name: Make Hugging Face pages public
+on: workflow_dispatch
+jobs:
+  public:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - run: pip install -q huggingface_hub
+      - shell: python
+        run: |
+          from huggingface_hub import HfApi
+          api = HfApi()
+          api.update_repo_settings("Malavnaik/civil-comments-distilbert-moderation", private=False)
+          api.update_repo_settings("Malavnaik/moderation-classifier-demo", repo_type="space", private=False)
+          for r, t in [("Malavnaik/civil-comments-distilbert-moderation", "model"), ("Malavnaik/moderation-classifier-demo", "space")]:
+              print(r, "private =", api.repo_info(r, repo_type=t).private)
