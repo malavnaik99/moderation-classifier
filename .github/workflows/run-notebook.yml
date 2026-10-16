@@ -14,7 +14,7 @@ jobs:
       - run: pip install -q --upgrade kaggle jupytext
       - name: Push to Kaggle
         run: |
-          jupytext --to ipynb kaggle/notebook.py -o kaggle/notebook.ipynb
+          jupytext --to ipynb --set-kernel python3 kaggle/notebook.py -o kaggle/notebook.ipynb
           kaggle kernels push -p kaggle
       - name: Wait for Kaggle to finish
         run: |
