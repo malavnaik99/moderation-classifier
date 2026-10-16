@@ -21,7 +21,9 @@ from sklearn.linear_model import LogisticRegression
 from sklearn.metrics import average_precision_score, precision_recall_curve, roc_auc_score
 from sklearn.model_selection import train_test_split
 
-DATA = os.environ.get("DATA", "/kaggle/input/jigsaw-unintended-bias-in-toxicity-classification/train.csv")
+# Kaggle's mount folder for competition data has changed over time, so search for it.
+DATA = os.environ.get("DATA") or next(Path("/kaggle/input").rglob("jigsaw-unintended-bias*/train.csv"), None)
+assert DATA, f"Competition data not attached. Found: {[str(p) for p in Path('/kaggle/input').rglob('*')][:20]}"
 OUT = Path(os.environ.get("OUT", "/kaggle/working"))
 (OUT / "model").mkdir(parents=True, exist_ok=True)
 SEED = 42
