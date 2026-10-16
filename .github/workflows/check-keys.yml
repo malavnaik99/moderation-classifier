@@ -1,0 +1,22 @@
+# Checks that the saved keys work. Reads profile info only; publishes nothing and never prints keys.
+name: Check keys
+on:
+  push:
+    paths: [".github/workflows/check-keys.yml"]
+  workflow_dispatch:
+jobs:
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Hugging Face key
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          pip install -q huggingface_hub
+          python -c "from huggingface_hub import whoami; print('Hugging Face key works for:', whoami()['name'])"
+      - name: Kaggle key
+        env:
+          KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+        run: |
+          pip install -q --upgrade kaggle
+          kaggle kernels list --mine --page-size 1 >/dev/null && echo "Kaggle key works"
