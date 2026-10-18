@@ -1,0 +1,26 @@
+# Late submission of a finished Kaggle notebook version to the closed Jigsaw competition (official score, no ranking or medals).
+name: Late submission to Jigsaw competition
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Kaggle notebook version to submit"
+        default: "8"
+jobs:
+  submit:
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      C: jigsaw-unintended-bias-in-toxicity-classification
+    steps:
+      - run: pip install -q --upgrade kaggle
+      - name: Submit
+        run: kaggle competitions submit -c $C -k malavnaik/moderation-classifier-civil-comments -f submission.csv -v ${{ inputs.version }} -m "DistilBERT late submission (portfolio, notebook v${{ inputs.version }})"
+      - name: Wait for the score
+        run: |
+          for i in $(seq 1 25); do
+            out=$(kaggle competitions submissions -c $C --csv | head -2); echo "$out"
+            echo "$out" | tail -1 | grep -qiE 'complete|error' && break
+            sleep 120
+          done
