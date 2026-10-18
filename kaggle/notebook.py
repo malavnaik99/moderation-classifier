@@ -273,7 +273,7 @@ print(json.dumps(metrics, indent=1))
 
 # %% [markdown]
 # ## What I learned
-# **What surprised me most:** harmless comments that simply *mention* a group get flagged far more often. With the simple model, half of the harmless comments mentioning "Black" were sent to review (50%), against 13% of harmless comments overall. The modern model cut that to 39% against 9.5%, but it didn't make the gap go away. A single headline score (0.96 out of 1) hides this completely, so I would always break results down by group before trusting a moderation model.
+# **What surprised me most:** harmless comments that simply *mention* a group get flagged far more often. With the simple model, half of the harmless comments mentioning "Black" were sent to review (50%), against 13% of harmless comments overall. The modern model shrank that gap, but it didn't close it. A single headline score (above 0.95 out of 1) hides this completely, so I would always break results down by group before trusting a moderation model.
 #
 # **What I'd do next:** tackle that bias directly. I'd add more harmless training examples that mention these groups, track the false-positive rate for each group separately, and only call the model "better" when those gaps shrink.
 #
