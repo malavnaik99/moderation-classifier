@@ -11,7 +11,7 @@ jobs:
       - run: pip install -q --upgrade kaggle huggingface_hub
       - name: Download from Hugging Face
         run: |
-          python -c "from huggingface_hub import snapshot_download; snapshot_download('distilbert-base-uncased', local_dir='ds', allow_patterns=['config.json','model.safetensors','tokenizer.json','tokenizer_config.json','vocab.txt'])"
+          python -c "from huggingface_hub import snapshot_download; snapshot_download('distilbert/distilbert-base-uncased', local_dir='ds', allow_patterns=['config.json','model.safetensors','tokenizer.json','tokenizer_config.json','vocab.txt'])"
           rm -rf ds/.cache
           cat > ds/dataset-metadata.json <<'JSON'
           {"title": "distilbert-base-uncased (copy for offline notebooks)", "id": "malavnaik/distilbert-base-uncased", "licenses": [{"name": "apache-2.0"}]}
