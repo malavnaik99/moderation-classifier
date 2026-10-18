@@ -92,7 +92,10 @@ import torch
 from torch.utils.data import DataLoader, TensorDataset
 from transformers import AutoModelForSequenceClassification, AutoTokenizer
 
-MODEL_NAME, MAX_LEN, BATCH = "distilbert-base-uncased", 128, 64
+MAX_LEN, BATCH = 128, 64
+# The competition requires internet off, so the base model comes from an attached dataset copy (Apache-2.0).
+MODEL_NAME = next((str(p.parent) for p in Path("/kaggle/input").rglob("config.json") if '"distilbert"' in p.read_text()), "distilbert-base-uncased")
+print("Base model:", MODEL_NAME)
 torch.manual_seed(SEED)  # repeatable weights init and batch order
 device = "cuda" if torch.cuda.is_available() else "cpu"
 print("Device:", device)

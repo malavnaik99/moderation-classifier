@@ -6,8 +6,8 @@
   "kernel_type": "notebook",
   "is_private": false,
   "enable_gpu": true,
-  "enable_internet": true,
-  "dataset_sources": [],
+  "enable_internet": false,
+  "dataset_sources": ["malavnaik/distilbert-base-uncased"],
   "competition_sources": ["jigsaw-unintended-bias-in-toxicity-classification"],
   "kernel_sources": []
 }
