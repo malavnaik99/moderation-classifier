@@ -16,7 +16,21 @@ jobs:
     steps:
       - run: pip install -q --upgrade kaggle
       - name: Submit
-        run: kaggle competitions submit -c $C -k malavnaik/moderation-classifier-civil-comments -f submission.csv -v ${{ inputs.version }} -m "DistilBERT late submission (portfolio, notebook v${{ inputs.version }})"
+        shell: python
+        run: |
+          # Print Kaggle's error body (the CLI only shows "400 Bad Request").
+          import os, sys, requests
+          orig = requests.Response.raise_for_status
+          def show(self):
+              if self.status_code >= 400:
+                  print("Kaggle says:", self.text[:2000])
+              return orig(self)
+          requests.Response.raise_for_status = show
+          from kaggle.cli import main
+          v = "${{ inputs.version }}"
+          sys.argv = ["kaggle", "competitions", "submit", "-c", os.environ["C"], "-k", "malavnaik/moderation-classifier-civil-comments",
+                      "-f", "submission.csv", "-v", v, "-m", f"DistilBERT late submission (portfolio, notebook v{v})"]
+          main()
       - name: Wait for the score
         run: |
           for i in $(seq 1 25); do
