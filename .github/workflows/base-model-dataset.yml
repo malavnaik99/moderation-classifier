@@ -14,7 +14,7 @@ jobs:
           python -c "from huggingface_hub import snapshot_download; snapshot_download('distilbert/distilbert-base-uncased', local_dir='ds', allow_patterns=['config.json','model.safetensors','tokenizer.json','tokenizer_config.json','vocab.txt'])"
           rm -rf ds/.cache
           cat > ds/dataset-metadata.json <<'JSON'
-          {"title": "distilbert-base-uncased (copy for offline notebooks)", "id": "malavnaik/distilbert-base-uncased", "licenses": [{"name": "apache-2.0"}]}
+          {"title": "distilbert-base-uncased offline copy", "id": "malavnaik/distilbert-base-uncased", "licenses": [{"name": "apache-2.0"}]}
           JSON
           ls -la ds
       - run: kaggle datasets create -p ds
