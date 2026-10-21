@@ -1,0 +1,12 @@
+# Uploads only the demo page (space/index.html) to the Space, without rebuilding the model.
+name: Update demo page
+on: workflow_dispatch
+jobs:
+  page:
+    runs-on: ubuntu-latest
+    env:
+      HF_TOKEN: ${{ secrets.HF_TOKEN }}
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q huggingface_hub
+      - run: python -c "from huggingface_hub import upload_file; upload_file(path_or_fileobj='space/index.html', path_in_repo='index.html', repo_id='Malavnaik/moderation-classifier-demo', repo_type='space'); print('uploaded')"
