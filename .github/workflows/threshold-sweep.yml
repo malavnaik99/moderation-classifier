@@ -3,6 +3,13 @@
 name: Threshold sweep
 on:
   workflow_dispatch:
+    inputs:
+      run:
+        description: "Run the notebook on Kaggle (untick to only fetch the last run's output)"
+        type: boolean
+        default: true
+permissions:
+  contents: write
 jobs:
   run:
     runs-on: ubuntu-latest
@@ -14,10 +21,12 @@ jobs:
       - uses: actions/checkout@v4
       - run: pip install -q --upgrade kaggle jupytext ipykernel
       - name: Push to Kaggle
+        if: inputs.run
         run: |
           jupytext --to ipynb --set-kernel python3 kaggle-sweep/sweep.py -o kaggle-sweep/sweep.ipynb
           kaggle kernels push -p kaggle-sweep
       - name: Wait for Kaggle to finish
+        if: inputs.run
         run: |
           sleep 60
           while true; do
@@ -32,6 +41,12 @@ jobs:
           ls -la out
           tail -c 3000 out/*.log 2>/dev/null || true
           [ -f out/sweep.json ] && python -c "import json;d=json.load(open('out/sweep.json'));print(json.dumps(d['check']));print(len(d['sweep']),'thresholds');print(json.dumps(d['sweep'][20]))"
+      - name: Save sweep.json in the repo (results/threshold-sweep.json)
+        run: |
+          mkdir -p results && cp out/sweep.json results/threshold-sweep.json
+          git config user.name "github-actions[bot]"; git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add results/threshold-sweep.json
+          git diff --cached --quiet || { git commit -qm "Save threshold sweep results"; git push -q; }
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: threshold-sweep, path: out, if-no-files-found: warn }
