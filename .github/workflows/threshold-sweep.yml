@@ -1,0 +1,37 @@
+# Re-scores the held-out test set with the published model on Kaggle's free GPU and saves a threshold sweep (sweep.json)
+# for the interactive sandbox on malavnaik.com. No retraining; the notebook checks it reproduces the published numbers.
+name: Threshold sweep
+on:
+  workflow_dispatch:
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120
+    env:
+      KAGGLE_API_TOKEN: ${{ secrets.KAGGLE_API_TOKEN }}
+      KERNEL: malavnaik/moderation-threshold-sweep
+    steps:
+      - uses: actions/checkout@v4
+      - run: pip install -q --upgrade kaggle jupytext ipykernel
+      - name: Push to Kaggle
+        run: |
+          jupytext --to ipynb --set-kernel python3 kaggle-sweep/sweep.py -o kaggle-sweep/sweep.ipynb
+          kaggle kernels push -p kaggle-sweep
+      - name: Wait for Kaggle to finish
+        run: |
+          sleep 60
+          while true; do
+            s=$(kaggle kernels status "$KERNEL" 2>&1 | tr 'A-Z' 'a-z'); echo "$(date -u +%H:%M) $s"
+            case "$s" in *complete*) break;; *error*|*cancel*) exit 1;; esac
+            sleep 60
+          done
+      - name: Download outputs
+        if: always()
+        run: |
+          mkdir -p out && kaggle kernels output "$KERNEL" -p out || true
+          ls -la out
+          tail -c 3000 out/*.log 2>/dev/null || true
+          [ -f out/sweep.json ] && python -c "import json;d=json.load(open('out/sweep.json'));print(json.dumps(d['check']));print(len(d['sweep']),'thresholds');print(json.dumps(d['sweep'][20]))"
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: threshold-sweep, path: out, if-no-files-found: warn }

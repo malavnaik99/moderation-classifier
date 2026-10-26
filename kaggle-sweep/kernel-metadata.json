@@ -1,0 +1,13 @@
+{
+  "id": "malavnaik/moderation-threshold-sweep",
+  "title": "Moderation threshold sweep",
+  "code_file": "sweep.ipynb",
+  "language": "python",
+  "kernel_type": "notebook",
+  "is_private": true,
+  "enable_gpu": true,
+  "enable_internet": false,
+  "dataset_sources": [],
+  "competition_sources": ["jigsaw-unintended-bias-in-toxicity-classification"],
+  "kernel_sources": ["malavnaik/moderation-classifier-civil-comments"]
+}
